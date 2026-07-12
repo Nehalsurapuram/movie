@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { promises as fs } from "fs";
+import path from "path";
 
 type Review = {
   id: string;
@@ -9,14 +11,30 @@ type Review = {
   createdAt: string;
 };
 
-// Simple in-memory store for demo purposes (resets on server restart)
-const globalAny: any = globalThis as any;
-if (!globalAny.__REVIEWS) globalAny.__REVIEWS = [] as Review[];
+const DATA_PATH = path.join(process.cwd(), "data", "reviews.json");
+
+async function readStore(): Promise<Review[]> {
+  try {
+    const raw = await fs.readFile(DATA_PATH, "utf-8");
+    return JSON.parse(raw) as Review[];
+  } catch (e) {
+    return [];
+  }
+}
+
+async function writeStore(items: Review[]) {
+  try {
+    await fs.mkdir(path.dirname(DATA_PATH), { recursive: true });
+    await fs.writeFile(DATA_PATH, JSON.stringify(items, null, 2), "utf-8");
+  } catch (e) {
+    // ignore write errors for now
+  }
+}
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const movieId = url.searchParams.get("movieId");
-  const all: Review[] = globalAny.__REVIEWS;
+  const all = await readStore();
   const result = movieId ? all.filter((r) => r.movieId === movieId) : all;
   return NextResponse.json(result);
 }
@@ -36,7 +54,9 @@ export async function POST(request: Request) {
       comment,
       createdAt: new Date().toISOString(),
     };
-    globalAny.__REVIEWS.push(review);
+    const all = await readStore();
+    all.push(review);
+    await writeStore(all);
     return NextResponse.json(review, { status: 201 });
   } catch (e) {
     return NextResponse.json({ error: "invalid json" }, { status: 400 });
