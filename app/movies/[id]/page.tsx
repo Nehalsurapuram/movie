@@ -1,70 +1,101 @@
-"use client";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import { MOVIES, getMovie } from "../../lib/movies";
+import Poster from "../../components/Poster";
+import WatchlistButton from "../../components/WatchlistButton";
+import MovieReviews from "../../components/MovieReviews";
 
-import { useEffect, useState } from "react";
-import ReviewForm from "../../components/ReviewForm";
-import { useParams } from "next/navigation";
+export function generateStaticParams() {
+  return MOVIES.map((m) => ({ id: m.id }));
+}
 
-type Review = {
-  id: string;
-  movieId: string;
-  author: string;
-  rating: number;
-  comment: string;
-  createdAt: string;
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const movie = getMovie(id);
+  return { title: movie ? `${movie.title} (${movie.year}) — MovieReviews` : "Movie" };
+}
 
-export default function MovieDetailPage() {
-  const params = useParams();
-  const id = params?.id as string;
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  async function load() {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/reviews?movieId=${id}`);
-      const data = await res.json();
-      setReviews(data || []);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    if (id) load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+export default async function MovieDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const movie = getMovie(id);
+  if (!movie) notFound();
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Movie {id}</h1>
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold">Reviews</h2>
-        {loading ? (
-          <p>Loading…</p>
-        ) : reviews.length === 0 ? (
-          <p className="text-zinc-500">No reviews yet — be the first!</p>
-        ) : (
-          <ul className="space-y-3">
-            {reviews.map((r) => (
-              <li key={r.id} className="p-3 border rounded bg-white">
-                <div className="flex items-center justify-between">
-                  <strong>{r.author}</strong>
-                  <span className="text-sm text-zinc-500">{r.rating} ⭐</span>
-                </div>
-                <p className="mt-2 text-sm">{r.comment}</p>
-                <div className="text-xs text-zinc-400 mt-2">{r.createdAt}</div>
-              </li>
-            ))}
-          </ul>
+    <div>
+      {/* Backdrop header */}
+      <div className="relative border-b border-zinc-200 dark:border-zinc-800">
+        {movie.backdrop && (
+          <div
+            className="absolute inset-0 bg-cover bg-center opacity-20"
+            style={{ backgroundImage: `url(${movie.backdrop})` }}
+          />
         )}
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-50 to-transparent dark:from-black" />
+        <div className="relative mx-auto max-w-6xl px-4 py-8">
+          <Link
+            href="/movies"
+            className="mb-6 inline-block text-sm text-zinc-500 hover:underline"
+          >
+            ← Back to movies
+          </Link>
+          <div className="flex flex-col gap-6 sm:flex-row">
+            <div className="w-40 shrink-0 overflow-hidden rounded-xl shadow-lg">
+              <div className="aspect-[2/3]">
+                <Poster
+                  src={movie.poster}
+                  alt={movie.title}
+                  color={movie.posterColor}
+                  className="h-full w-full"
+                />
+              </div>
+            </div>
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold sm:text-4xl">{movie.title}</h1>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+                <span>{movie.year}</span>
+                <span>·</span>
+                <span>{Math.floor(movie.runtime / 60)}h {movie.runtime % 60}m</span>
+                <span>·</span>
+                <span>Dir. {movie.director}</span>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {movie.genres.map((g) => (
+                  <span
+                    key={g}
+                    className="rounded-full bg-zinc-200 px-3 py-1 text-xs font-medium dark:bg-zinc-800"
+                  >
+                    {g}
+                  </span>
+                ))}
+              </div>
+              <p className="mt-4 max-w-2xl text-zinc-700 dark:text-zinc-300">
+                {movie.synopsis}
+              </p>
+              <p className="mt-3 text-sm text-zinc-500">
+                <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                  Starring:
+                </span>{" "}
+                {movie.cast.join(", ")}
+              </p>
+              <div className="mt-5">
+                <WatchlistButton movieId={movie.id} />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="max-w-md">
-        <h2 className="text-lg font-semibold mb-2">Leave a review</h2>
-        <ReviewForm movieId={id} onSaved={() => load()} />
+      {/* Reviews */}
+      <div className="mx-auto max-w-6xl px-4 py-10">
+        <MovieReviews movieId={movie.id} />
       </div>
     </div>
   );

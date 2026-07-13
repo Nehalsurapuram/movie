@@ -1,54 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MovieReviews
 
-## Getting Started
+A full-featured movie review platform built with **Next.js 16 (App Router)**, **React 19**, and **Tailwind CSS 4**.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Movie catalog** — a curated library of films with posters, genres, cast, director, runtime, and synopsis (`app/lib/movies.ts`).
+- **Browse & discover** — live search (title, director, cast), genre filtering, and sorting (A–Z, newest, oldest, longest) on `/movies`.
+- **Movie detail pages** — statically generated (SSG) pages with a backdrop header, full metadata, and reviews.
+- **Reviews & ratings**
+  - Interactive 1–5 star picker with an optional headline.
+  - Server-side validation (required fields, rating range, length limits).
+  - Rating summary with average, count, and a star-distribution bar chart.
+  - Sort reviews by most recent, most helpful, or highest rated.
+  - "Helpful" votes and review deletion.
+- **Watchlist** — add/remove any movie; persisted in `localStorage` and synced across tabs (`/watchlist`).
+- **Polished UI** — responsive grid, light/dark mode, sticky navbar, hover animations, and graceful poster fallbacks when offline.
+
+## Architecture
+
+| Path | Purpose |
+| --- | --- |
+| `app/lib/movies.ts` | Movie catalog + lookup/genre helpers |
+| `app/lib/types.ts` | Shared `Movie`, `Review`, `RatingSummary` types |
+| `app/lib/ratings.ts` | Rating aggregation |
+| `app/lib/useWatchlist.ts` | localStorage-backed watchlist hook |
+| `app/api/reviews/route.ts` | `GET` (list + summary) / `POST` (create) |
+| `app/api/reviews/[id]/route.ts` | `PATCH` (helpful vote) / `DELETE` |
+| `app/components/*` | UI: cards, star rating, forms, lists, navbar |
+| `data/reviews.json` | Persisted reviews (file-based store) |
+
+## API
+
+```
+GET    /api/reviews?movieId=<id>&sort=recent|helpful|rating
+POST   /api/reviews            { movieId, author, rating (1–5), title?, comment }
+PATCH  /api/reviews/:id        { action: "helpful" }
+DELETE /api/reviews/:id
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
----
-
-## Movie review demo
-
-Run locally:
+## Getting started
 
 ```bash
-# preferred: Bun
-bun install
-bun run dev
-
-# fallback with npm
 npm install
 npm run dev
 ```
 
-Open http://localhost:3000/movies to see the sample movies. Reviews are persisted to `data/reviews.json` in the project root.
+Open [http://localhost:3000](http://localhost:3000). Reviews persist to `data/reviews.json` in the project root.
+
+> Poster images load from TMDB's public CDN and fall back to a titled gradient when offline — no API key required.
