@@ -23,9 +23,13 @@ export default function MovieCard({ movie }: { movie: Movie }) {
             {movie.title}
           </h3>
           <div className="mt-1 flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
-            <span>{movie.year}</span>
-            <span>·</span>
-            <span>{movie.genres[0]}</span>
+            <span>{movie.year || "—"}</span>
+            {movie.genres[0] && (
+              <>
+                <span>·</span>
+                <span>{movie.genres[0]}</span>
+              </>
+            )}
           </div>
         </div>
       </Link>

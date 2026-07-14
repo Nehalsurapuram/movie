@@ -1,192 +1,178 @@
 import type { Movie } from "./types";
 
-// Self-contained catalog. Poster URLs point at TMDB's public image CDN and
-// gracefully fall back to a generated gradient (see posterColor) when offline.
-const IMG = "https://image.tmdb.org/t/p/w500";
-const BG = "https://image.tmdb.org/t/p/w780";
+// Data source: the OMDB API (https://www.omdbapi.com). OMDB has no "list all"
+// endpoint, so we keep a curated set of IMDb IDs to surface and fetch full
+// details for each by id. Responses are cached for a day via the fetch cache.
+const API_KEY = process.env.OMDB_API_KEY ?? "abc8b20c";
+const BASE = "https://www.omdbapi.com";
 
-export const MOVIES: Movie[] = [
-  {
-    id: "tt0111161",
-    title: "The Shawshank Redemption",
-    year: 1994,
-    genres: ["Drama", "Crime"],
-    runtime: 142,
-    director: "Frank Darabont",
-    cast: ["Tim Robbins", "Morgan Freeman", "Bob Gunton"],
-    synopsis:
-      "Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency.",
-    poster: `${IMG}/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg`,
-    backdrop: `${BG}/kXfqcdQKsToO0OUXHcrrNCHDBzO.jpg`,
-    posterColor: "#3b5249",
-    featured: true,
-  },
-  {
-    id: "tt0068646",
-    title: "The Godfather",
-    year: 1972,
-    genres: ["Drama", "Crime"],
-    runtime: 175,
-    director: "Francis Ford Coppola",
-    cast: ["Marlon Brando", "Al Pacino", "James Caan"],
-    synopsis:
-      "The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant son.",
-    poster: `${IMG}/3bhkrj58Vtu7enYsRolD1fZdja1.jpg`,
-    backdrop: `${BG}/tmU7GeKVybMWFButWEGl2M4GeiP.jpg`,
-    posterColor: "#4a3b28",
-    featured: true,
-  },
-  {
-    id: "tt0468569",
-    title: "The Dark Knight",
-    year: 2008,
-    genres: ["Action", "Crime", "Drama"],
-    runtime: 152,
-    director: "Christopher Nolan",
-    cast: ["Christian Bale", "Heath Ledger", "Aaron Eckhart"],
-    synopsis:
-      "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.",
-    poster: `${IMG}/qJ2tW6WMUDux911r6m7haRef0WH.jpg`,
-    backdrop: `${BG}/hqkIcbrOHL86UncnHIsHVcVmzue.jpg`,
-    posterColor: "#1c2733",
-    featured: true,
-  },
-  {
-    id: "tt0110912",
-    title: "Pulp Fiction",
-    year: 1994,
-    genres: ["Thriller", "Crime"],
-    runtime: 154,
-    director: "Quentin Tarantino",
-    cast: ["John Travolta", "Uma Thurman", "Samuel L. Jackson"],
-    synopsis:
-      "The lives of two mob hitmen, a boxer, a gangster and his wife intertwine in four tales of violence and redemption.",
-    poster: `${IMG}/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg`,
-    backdrop: `${BG}/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg`,
-    posterColor: "#3a2a2a",
-  },
-  {
-    id: "tt1375666",
-    title: "Inception",
-    year: 2010,
-    genres: ["Action", "Sci-Fi", "Adventure"],
-    runtime: 148,
-    director: "Christopher Nolan",
-    cast: ["Leonardo DiCaprio", "Joseph Gordon-Levitt", "Elliot Page"],
-    synopsis:
-      "A thief who steals corporate secrets through dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.",
-    poster: `${IMG}/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg`,
-    backdrop: `${BG}/s3TBrRGB1iav7gFOCNx3H31MoES.jpg`,
-    posterColor: "#22303a",
-    featured: true,
-  },
-  {
-    id: "tt0137523",
-    title: "Fight Club",
-    year: 1999,
-    genres: ["Drama", "Thriller"],
-    runtime: 139,
-    director: "David Fincher",
-    cast: ["Brad Pitt", "Edward Norton", "Helena Bonham Carter"],
-    synopsis:
-      "An insomniac office worker and a devil-may-care soap maker form an underground fight club that evolves into something much, much more.",
-    poster: `${IMG}/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg`,
-    backdrop: `${BG}/hZkgoQYus5vegHoetLkCJzb17zJ.jpg`,
-    posterColor: "#3a1f1f",
-  },
-  {
-    id: "tt0109830",
-    title: "Forrest Gump",
-    year: 1994,
-    genres: ["Drama", "Romance"],
-    runtime: 142,
-    director: "Robert Zemeckis",
-    cast: ["Tom Hanks", "Robin Wright", "Gary Sinise"],
-    synopsis:
-      "The history of the United States from the 1950s to the '70s unfolds from the perspective of an Alabama man with an I.Q. of 75.",
-    poster: `${IMG}/arw2vcBveWOVZr6pxd9XTd1TdQa.jpg`,
-    backdrop: `${BG}/7c9UVPPiTPltouxRVY6N9uugaVA.jpg`,
-    posterColor: "#2f3a2a",
-  },
-  {
-    id: "tt0816692",
-    title: "Interstellar",
-    year: 2014,
-    genres: ["Adventure", "Drama", "Sci-Fi"],
-    runtime: 169,
-    director: "Christopher Nolan",
-    cast: ["Matthew McConaughey", "Anne Hathaway", "Jessica Chastain"],
-    synopsis:
-      "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival.",
-    poster: `${IMG}/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg`,
-    backdrop: `${BG}/xJHokMbljvjADYdit5fK5VQsXEG.jpg`,
-    posterColor: "#20272f",
-    featured: true,
-  },
-  {
-    id: "tt0133093",
-    title: "The Matrix",
-    year: 1999,
-    genres: ["Action", "Sci-Fi"],
-    runtime: 136,
-    director: "The Wachowskis",
-    cast: ["Keanu Reeves", "Laurence Fishburne", "Carrie-Anne Moss"],
-    synopsis:
-      "A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.",
-    poster: `${IMG}/p96dm7sCMn4VYAStA6siNz30G1r.jpg`,
-    backdrop: `${BG}/icmmSD4vTTDKOq2vvdulafOGw93.jpg`,
-    posterColor: "#1c2a1c",
-  },
-  {
-    id: "tt0167260",
-    title: "The Lord of the Rings: The Return of the King",
-    year: 2003,
-    genres: ["Adventure", "Fantasy", "Drama"],
-    runtime: 201,
-    director: "Peter Jackson",
-    cast: ["Elijah Wood", "Viggo Mortensen", "Ian McKellen"],
-    synopsis:
-      "Gandalf and Aragorn lead the World of Men against Sauron's army to draw his gaze from Frodo and Sam as they approach Mount Doom with the One Ring.",
-    poster: `${IMG}/rCzpDGLbOoPwLjy3OAm5NUPOTrC.jpg`,
-    backdrop: `${BG}/lXhgCODAbBXL5buk9yEmTpOoOgR.jpg`,
-    posterColor: "#2a2416",
-  },
-  {
-    id: "tt0114369",
-    title: "Se7en",
-    year: 1995,
-    genres: ["Crime", "Mystery", "Thriller"],
-    runtime: 127,
-    director: "David Fincher",
-    cast: ["Morgan Freeman", "Brad Pitt", "Kevin Spacey"],
-    synopsis:
-      "Two detectives, a rookie and a veteran, hunt a serial killer who uses the seven deadly sins as his motives.",
-    poster: `${IMG}/6yoghtyTpznpBik8EngEmJskVUO.jpg`,
-    backdrop: `${BG}/ba4CpvnaxvAgff2jHiaqJrVpZJ5.jpg`,
-    posterColor: "#26221f",
-  },
-  {
-    id: "tt0088763",
-    title: "Back to the Future",
-    year: 1985,
-    genres: ["Adventure", "Comedy", "Sci-Fi"],
-    runtime: 116,
-    director: "Robert Zemeckis",
-    cast: ["Michael J. Fox", "Christopher Lloyd", "Lea Thompson"],
-    synopsis:
-      "Marty McFly is accidentally sent 30 years into the past in a time-traveling DeLorean invented by his friend, Doc Brown.",
-    poster: `${IMG}/fNOH9f1aA7XRTzl1sAOx9iF553Q.jpg`,
-    backdrop: `${BG}/fq3wyOs1RHyz2yfzsb4sck7aWRG.jpg`,
-    posterColor: "#2a2a3a",
-  },
+type CatalogEntry = { id: string; featured?: boolean };
+
+// The catalog. `featured` drives the home page; everything else comes from OMDB.
+const CATALOG: CatalogEntry[] = [
+  { id: "tt0111161", featured: true }, // The Shawshank Redemption
+  { id: "tt0068646", featured: true }, // The Godfather
+  { id: "tt0468569", featured: true }, // The Dark Knight
+  { id: "tt0110912" }, // Pulp Fiction
+  { id: "tt1375666", featured: true }, // Inception
+  { id: "tt0137523" }, // Fight Club
+  { id: "tt0109830" }, // Forrest Gump
+  { id: "tt0816692", featured: true }, // Interstellar
+  { id: "tt0133093" }, // The Matrix
+  { id: "tt0167260" }, // LOTR: The Return of the King
+  { id: "tt0114369" }, // Se7en
+  { id: "tt0088763" }, // Back to the Future
+  { id: "tt3896198" }, // Guardians of the Galaxy: Vol. 2
 ];
 
-export function getMovie(id: string): Movie | undefined {
-  return MOVIES.find((m) => m.id === id);
+export const MOVIE_IDS = CATALOG.map((c) => c.id);
+
+// Shape of the OMDB "by ID" response (the fields we consume).
+type OmdbMovie = {
+  Title: string;
+  Year: string;
+  Runtime: string;
+  Genre: string;
+  Director: string;
+  Actors: string;
+  Plot: string;
+  Poster: string;
+  imdbID: string;
+  Response: string;
+};
+
+const NA = (v?: string) => (v && v !== "N/A" ? v : "");
+
+function splitList(s?: string): string[] {
+  return NA(s)
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
 }
 
-export function allGenres(): string[] {
+function parseRuntime(s?: string): number {
+  const m = /(\d+)/.exec(s ?? "");
+  return m ? Number(m[1]) : 0;
+}
+
+// Deterministic dark hex from the id so the gradient fallback (see Poster) is
+// stable across renders even though OMDB doesn't supply a color.
+function seedColor(id: string): string {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  const hue = h % 360;
+  const s = 0.35;
+  const l = 0.2;
+  const k = (n: number) => (n + hue / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number) => {
+    const color = l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+    return Math.round(255 * color)
+      .toString(16)
+      .padStart(2, "0");
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
+}
+
+function mapMovie(raw: OmdbMovie, featured?: boolean): Movie {
+  return {
+    id: raw.imdbID,
+    title: raw.Title,
+    year: Number(raw.Year?.slice(0, 4)) || 0,
+    genres: splitList(raw.Genre),
+    runtime: parseRuntime(raw.Runtime),
+    director: NA(raw.Director) || "Unknown",
+    cast: splitList(raw.Actors),
+    synopsis: NA(raw.Plot),
+    poster: NA(raw.Poster),
+    posterColor: seedColor(raw.imdbID),
+    featured,
+  };
+}
+
+async function fetchById(id: string): Promise<OmdbMovie | null> {
+  try {
+    const res = await fetch(`${BASE}/?apikey=${API_KEY}&i=${id}&plot=short`, {
+      next: { revalidate: 86400 },
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as OmdbMovie;
+    return data.Response === "True" ? data : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function getMovies(): Promise<Movie[]> {
+  const results = await Promise.all(
+    CATALOG.map(async (c) => {
+      const raw = await fetchById(c.id);
+      return raw ? mapMovie(raw, c.featured) : null;
+    }),
+  );
+  return results.filter((m): m is Movie => m !== null);
+}
+
+export async function getMovie(id: string): Promise<Movie | undefined> {
+  const entry = CATALOG.find((c) => c.id === id);
+  const raw = await fetchById(id);
+  return raw ? mapMovie(raw, entry?.featured) : undefined;
+}
+
+// Shape of an item in the OMDB "by search" response. Search only returns these
+// four fields — genre/runtime/cast/plot require a follow-up fetch by id.
+type OmdbSearchItem = {
+  Title: string;
+  Year: string;
+  imdbID: string;
+  Poster: string;
+};
+
+function searchItemToMovie(it: OmdbSearchItem): Movie {
+  return {
+    id: it.imdbID,
+    title: it.Title,
+    year: Number(it.Year?.slice(0, 4)) || 0,
+    genres: [],
+    runtime: 0,
+    director: "",
+    cast: [],
+    synopsis: "",
+    poster: NA(it.Poster),
+    posterColor: seedColor(it.imdbID),
+  };
+}
+
+// Full-text search across the entire OMDB database (not just the catalog).
+// Returns partial Movie records (title/year/poster only); the detail page
+// fills in the rest via getMovie(id). Results are paginated 10 per page.
+export async function searchMovies(
+  query: string,
+  page = 1,
+): Promise<{ results: Movie[]; total: number }> {
+  const q = query.trim();
+  if (q.length < 2) return { results: [], total: 0 };
+  try {
+    const url = `${BASE}/?apikey=${API_KEY}&type=movie&page=${page}&s=${encodeURIComponent(q)}`;
+    const res = await fetch(url, { next: { revalidate: 3600 } });
+    if (!res.ok) return { results: [], total: 0 };
+    const data = (await res.json()) as {
+      Response: string;
+      Search?: OmdbSearchItem[];
+      totalResults?: string;
+    };
+    if (data.Response !== "True" || !data.Search) return { results: [], total: 0 };
+    return {
+      results: data.Search.map(searchItemToMovie),
+      total: Number(data.totalResults) || data.Search.length,
+    };
+  } catch {
+    return { results: [], total: 0 };
+  }
+}
+
+export function allGenres(movies: Movie[]): string[] {
   const set = new Set<string>();
-  MOVIES.forEach((m) => m.genres.forEach((g) => set.add(g)));
+  movies.forEach((m) => m.genres.forEach((g) => set.add(g)));
   return Array.from(set).sort();
 }

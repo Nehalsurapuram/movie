@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { MOVIES, getMovie } from "../../lib/movies";
+import { MOVIE_IDS, getMovie } from "../../lib/movies";
 import Poster from "../../components/Poster";
 import WatchlistButton from "../../components/WatchlistButton";
 import MovieReviews from "../../components/MovieReviews";
 
 export function generateStaticParams() {
-  return MOVIES.map((m) => ({ id: m.id }));
+  return MOVIE_IDS.map((id) => ({ id }));
 }
 
 export async function generateMetadata({
@@ -15,7 +15,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const movie = getMovie(id);
+  const movie = await getMovie(id);
   return { title: movie ? `${movie.title} (${movie.year}) — MovieReviews` : "Movie" };
 }
 
@@ -25,7 +25,7 @@ export default async function MovieDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const movie = getMovie(id);
+  const movie = await getMovie(id);
   if (!movie) notFound();
 
   return (
