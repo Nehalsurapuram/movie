@@ -13,7 +13,7 @@ export default async function Home() {
         <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-purple-500/10" />
         <div className="relative mx-auto max-w-6xl px-4 py-20 text-center">
           <h1 className="mx-auto max-w-2xl text-4xl font-bold tracking-tight sm:text-5xl">
-            shrish chutiye review de .
+            everything you need to know about movies, in one place.
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-lg text-zinc-600 dark:text-zinc-400">
             Discover films, read what the community thinks, rate your favorites,
